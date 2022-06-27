@@ -123,7 +123,7 @@ class UserUpdateView(mixins.RetrieveModelMixin,
 class UserDepartmentUpdateView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserDepartmentUpdateSerializer
-    # permission_classes = [IsAuthenticated, IsHR]
+    permission_classes = [IsAuthenticated, IsHR]
 
 
     def get(self, request, *args, **kwargs):
@@ -141,7 +141,7 @@ class UserRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
                                    generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = SingleUserSerializer
-    # permission_classes = [IsAuthenticated, IsHR]
+    permission_classes = [IsAuthenticated, IsHR]
 
 
     def get(self, request, *args, **kwargs):
@@ -159,7 +159,7 @@ class UserRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
 
 class UserTypeDetailAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = UserTypeUpdateSerializer
-    # permission_classes = [IsAuthenticated, IsHR]
+    permission_classes = [IsAuthenticated, IsHR]
 
     def get_object(self, pk):
         try:
@@ -197,7 +197,7 @@ class LogoutAPIView(APIView):
 class UserAttritionRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserAttritionDetailSerializer
-    # permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdmin]
 
 
     def get(self, request, *args, **kwargs):
@@ -212,7 +212,7 @@ class UserAttritionRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.UpdateMo
 class UserAttritionHRRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserAttritionHRSerializer
-    # permission_classes = [IsAuthenticated, IsHR]
+    permission_classes = [IsAuthenticated, IsHR]
 
 
     def get(self, request, *args, **kwargs):
@@ -227,7 +227,7 @@ class UserAttritionHRRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.Update
 class UserAttritionICTRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserAttritionICTSerializer
-    # permission_classes = [IsAuthenticated, IsHR]
+    permission_classes = [IsAuthenticated, IsHR]
 
     def get(self, request, *args, **kwargs):
         """Retrieves a user's attrition ICT details based on a given id (pk)"""
