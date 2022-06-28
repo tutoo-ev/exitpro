@@ -7,11 +7,13 @@ from .views import RegisterAPIView, UsersListView, UserRetrieveUpdateDeleteView,
     UserAttritionHRRetrieveUpdateView, UserAttritionICTRetrieveUpdateView
 
 
+
 # router = DefaultRouter()
 # router.register('api', UserViewSet, basename='create_user')
 
 urlpatterns = [
     # path('', include(router.urls)),
+    # path('login/', CustomLoginView.as_view(), name='token_obtain_pair'),
     path('register/', RegisterAPIView.as_view(), name='register'),
     path('', UsersListView.as_view(), name='all_users'),
     path('<int:pk>', UserRetrieveUpdateDeleteView.as_view(), name='single_user'),

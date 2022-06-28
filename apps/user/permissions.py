@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission
-from .models import HRUser, AdminUser, EmployeeUser
+from rest_framework.response import Response
+from rest_framework import status
+from .models import HRUser, AdminUser, EmployeeUser, PartnerUser
 
 
 class IsHR(BasePermission):
@@ -19,5 +21,12 @@ class IsAdmin(BasePermission):
 class IsEmployee(BasePermission):
     def has_permission(self, request, view):
         user_available = AdminUser.objects.filter(pk=request.user.pk).exists()
+        print(user_available, "Employee user status")
+        return user_available
+
+
+class IsPartner(BasePermission):
+    def has_permission(self, request, view):
+        user_available = PartnerUser.objects.filter(pk=request.user.pk).exists()
         print(user_available, "Employee user status")
         return user_available

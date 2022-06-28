@@ -7,6 +7,7 @@ class UserType(models.TextChoices):
     EMPLOYEE = "EMPLOYEE", "Employee"
     ADMIN = "ADMIN", "Admin"
     HR = "HR", "Hr"
+    PARTNER = "PARTNER", "Partner"
 
 
 class AttritionTypes(models.TextChoices):
@@ -77,6 +78,12 @@ class HRManager(models.Manager):
         return super().get_queryset(*args, **kwargs).filter(user_type=UserType.HR)
 
 
+class PartnerManager(models.Manager):
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(user_type=UserType.PARTNER)
+
+
+
 class EmployeeUser(User):
     objects = EmployeeManager()
 
@@ -89,7 +96,7 @@ class EmployeeUser(User):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.user_type = User.UserTypes.EMPLOYEE
+            self.user_type = User.UserType.EMPLOYEE
         return super().save(*args, **kwargs)
 
 
@@ -105,7 +112,7 @@ class AdminUser(User):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.user_type = User.UserTypes.ADMIN
+            self.user_type = User.UserType.ADMIN
         return super().save(*args, **kwargs)
 
 
@@ -121,5 +128,21 @@ class HRUser(User):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.user_type = User.UserTypes.HR
+            self.user_type = User.UserType.HR
+        return super().save(*args, **kwargs)
+
+
+class PartnerUser(User):
+    objects = HRManager()
+
+    class Meta:
+        proxy = True
+
+    @staticmethod
+    def get_user_type():
+        return "HR"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.user_type = User.UserType.PARTNER
         return super().save(*args, **kwargs)

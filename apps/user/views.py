@@ -62,18 +62,34 @@ from rest_framework import status, mixins, generics
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.mail import EmailMessage
 from .models import User
 from .serializers import CreateUserSerializer, UserViewSerializer, SingleUserSerializer, UserTypeUpdateSerializer, \
     UserDepartmentUpdateSerializer, UserAttritionDetailSerializer, UserAttritionHRSerializer, \
     UserAttritionICTSerializer
-from .permissions import IsHR, IsAdmin, IsEmployee
+from .permissions import IsHR, IsAdmin, IsEmployee, IsPartner
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.signals import request_finished
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+# class CustomLoginView(TokenObtainPairSerializer, generics.GenericAPIView):
+#     def validate(self, attrs):
+#         # The default result (access/refresh tokens)
+#         data = super(CustomLoginView, self).validate(attrs)
+#         # Custom data you want to include
+#         data.update({'user': self.user.username})
+#         data.update({'id': self.user.id})
+#         # and everything else you want to send in the response
+#         return data
 
 
 class RegisterAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
     serializer_class = CreateUserSerializer
 
     def post(self, request, format=None):
-        """Creates/ registers a user"""
+        """Creates/ registers a user (No permissions, anyone can create)"""
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -96,7 +112,7 @@ class UsersListView(mixins.ListModelMixin, generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        """Lists out all the users"""
+        """Lists out all the users. Needs to be logged in"""
         return self.list(request, *args, **kwargs)
 
 
@@ -107,13 +123,12 @@ class UserUpdateView(mixins.RetrieveModelMixin,
     serializer_class = CreateUserSerializer
     permission_classes = [IsAuthenticated, IsAdmin]
 
-
     def get(self, request, *args, **kwargs):
-        """Retrieves a user based on a given id (pk)"""
+        """Retrieves a user based on a given id (pk). Only ADMIN permitted."""
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        """Updates a user based on the given id (pk) """
+        """Updates a user based on the given id (pk). Only ADMIN permitted."""
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -125,13 +140,12 @@ class UserDepartmentUpdateView(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
     serializer_class = UserDepartmentUpdateSerializer
     permission_classes = [IsAuthenticated, IsHR]
 
-
     def get(self, request, *args, **kwargs):
-        """Retrieves a user's department details based on a given id (pk)"""
+        """Retrieves a user's department details based on a given id (pk). Only HR permitted."""
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        """Updates a user's department details based on the given id (pk) """
+        """Updates a user's department details based on the given id (pk). Only HR permitted."""
         return self.update(request, *args, **kwargs)
 
 
@@ -143,22 +157,22 @@ class UserRetrieveUpdateDeleteView(mixins.RetrieveModelMixin,
     serializer_class = SingleUserSerializer
     permission_classes = [IsAuthenticated, IsHR]
 
-
     def get(self, request, *args, **kwargs):
-        """Retrieves a user  detail based on a given id (pk)"""
+        """Retrieves a user  detail based on a given id (pk). Only HR permitted."""
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        """Updates a user detail based on the given id (pk)"""
+        """Updates a user detail based on the given id (pk). Only HR permitted."""
         return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        """Deletes a user based on the particular id (pk)"""
+        """Deletes a user based on the particular id (pk). Only HR permitted."""
         return self.destroy(request, *args, **kwargs)
 
 
 class UserTypeDetailAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = UserTypeUpdateSerializer
+    queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsHR]
 
     def get_object(self, pk):
@@ -168,11 +182,13 @@ class UserTypeDetailAPIView(generics.RetrieveUpdateAPIView):
             raise Http404
 
     def get(self, request, pk, format=None):
+        """Retrieves a user  detail based on a given id (pk). Only HR permitted."""
         user = self.get_object(pk)
         serializer = UserTypeUpdateSerializer(user)
         return Response(serializer.data)
 
     def put(self, request, pk, format=None):
+        """Updates a user detail based on the given id (pk). Only HR permitted."""
         user = self.get_object(pk)
         serializer = UserTypeUpdateSerializer(user, data=request.data)
         if serializer.is_valid():
@@ -189,23 +205,34 @@ class LogoutAPIView(APIView):
             refresh_token = request.data.get('refresh_token')
             token_obj = RefreshToken(refresh_token)
             token_obj.blacklist()
-            return Response({'message':'successfully logged out'},status= status.HTTP_200_OK)
+            return Response({'message': 'successfully logged out'},status= status.HTTP_200_OK)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+def send_mail_to_HR_ICT(request, **kwargs):
+    print(request.data)
+    print("mail send call received")
+    to_mail = "evexitpro@gmail.com"
+    send_email = EmailMessage("Employee relieval update",
+                              f"User {request.data['email']}, {request.data['name']} has Submitted Relieval request",
+                              to=[to_mail]
+                              )
+    send_email.send()
 
 
 class UserAttritionRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = User.objects.all()
     serializer_class = UserAttritionDetailSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]
-
+    permission_classes = [IsAuthenticated, IsPartner]
 
     def get(self, request, *args, **kwargs):
-        """Retrieves a user's attrition details based on a given id (pk)"""
+        """Retrieves a user's attrition details based on a given id (pk). Only PARTNER user is permitted"""
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        """Updates a user's attrition details based on the given id (pk) """
+        """Updates a user's attrition details based on the given id (pk). Only PARTNER user is permitted"""
+        send_mail_to_HR_ICT(request)
         return self.update(request, *args, **kwargs)
 
 
@@ -214,13 +241,12 @@ class UserAttritionHRRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.Update
     serializer_class = UserAttritionHRSerializer
     permission_classes = [IsAuthenticated, IsHR]
 
-
     def get(self, request, *args, **kwargs):
-        """Retrieves a user's attrition ICT details based on a given id (pk)"""
+        """Retrieves a user's attrition ICT details based on a given id (pk). Only HR is permitted."""
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        """Updates a user's attrition ICT details based on the given id (pk) """
+        """Updates a user's attrition ICT details based on the given id (pk). Only HR is permitted."""
         return self.update(request, *args, **kwargs)
 
 
@@ -230,10 +256,13 @@ class UserAttritionICTRetrieveUpdateView(mixins.RetrieveModelMixin, mixins.Updat
     permission_classes = [IsAuthenticated, IsHR]
 
     def get(self, request, *args, **kwargs):
-        """Retrieves a user's attrition ICT details based on a given id (pk)"""
+        """Retrieves a user's attrition ICT details based on a given id (pk).  Only HR is permitted."""
         return self.retrieve(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        """Updates a user's attrition ICT details based on the given id (pk) """
+        """Updates a user's attrition ICT details based on the given id (pk). Only HR is permitted."""
         return self.update(request, *args, **kwargs)
+
+
+
 
