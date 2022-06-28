@@ -100,7 +100,7 @@ class RegisterAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
                 'access': str(refresh.access_token),
                 'user': serializer.data,
                 }
-            # we are sending token instead of serialized data
+            # we are sending token instead of serialized data here
             # serializer_data = serializer.data
             return Response(response_data,status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
