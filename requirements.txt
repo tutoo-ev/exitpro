@@ -14,6 +14,7 @@ itypes==1.2.0
 Jinja2==3.1.2
 MarkupSafe==2.1.1
 packaging==21.3
+PyBambooHR==0.8.1
 PyJWT==2.4.0
 pyparsing==3.0.9
 python-decouple==3.6
@@ -25,3 +26,4 @@ ruamel.yaml.clib==0.2.6
 sqlparse==0.4.2
 uritemplate==4.1.1
 urllib3==1.26.9
+xmltodict==0.13.0
